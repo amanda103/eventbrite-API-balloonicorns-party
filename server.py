@@ -33,6 +33,7 @@ def find_afterparties():
     measurement = request.args.get('measurement')
     sort = request.args.get('sort')
 
+
     # If the required information is in the request, look for afterparties
     if location and distance and measurement:
 
@@ -45,8 +46,16 @@ def find_afterparties():
         #   the form data.
         # - (Make sure to save the JSON data from the response to the data
         #   variable so that it can display on the page as well.)
+        payload ={"token":os.environ["EVENTBRITE_TOKEN"], "q": query, 
+        "location.address": location, "location.within": distance, 
+        "sort_by": sort}
 
-        data = {'This': ['Some', 'mock', 'JSON']}
+        url = "https://www.eventbriteapi.com/v3/events/search"    
+
+        response = requests.get(url, params=payload)
+        data = response.json()
+
+        # data = {'This': ['Some', 'mock', 'JSON']}
         events = []
 
         return render_template("afterparties.html",
