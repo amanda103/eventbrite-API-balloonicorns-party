@@ -8,6 +8,10 @@ from flask_debugtoolbar import DebugToolbarExtension
 app = Flask(__name__)
 app.secret_key = "SECRETSECRETSECRET"
 
+eventbrite_token = os.environ["EVENTBRITE_TOKEN"]
+
+url = "https://www.eventbriteapi.com/v3/" 
+
 
 @app.route("/")
 def homepage():
@@ -46,13 +50,12 @@ def find_afterparties():
         #   the form data.
         # - (Make sure to save the JSON data from the response to the data
         #   variable so that it can display on the page as well.)
-        payload ={"token":os.environ["EVENTBRITE_TOKEN"], "q": query, 
+        payload ={"token": eventbrite_token, "q": query, 
         "location.address": location, "location.within": distance, 
         "sort_by": sort}
 
-        url = "https://www.eventbriteapi.com/v3/events/search"    
 
-        response = requests.get(url, params=payload)
+        response = requests.get(url + "events/search", params=payload)
         data = response.json()
 
         # data = {'This': ['Some', 'mock', 'JSON']}
@@ -93,14 +96,25 @@ def create_eventbrite_event():
     # - Make a request to the Eventbrite API to create a new event using the
     # form data and save the result in a variable called `json`.
     # - Flash add the created event's URL as a link to the success flash message
+    payload = {"event.name.html": name, "event.start.utc": start_time,
+                "event.end.utc": end_time, "event.start.timezone": timezone, 
+                "event.end.timezone": timezone,
+                "event.currency": currency}
+
+    headers = {'Authorization': 'Bearer '+ eventbrite_token}
+
+    response = requests.post(url + "events/", headers=headers, data=payload)
+    data = response.json()
+    print(data['url'])
 
     ##### UNCOMMENT THIS once you make your request! #####
-    # if response.ok:
-    #     flash("Your event was created!")
-    #     return redirect("/")
-    # else:
-    #     flash('OAuth failed: {}'.format(data['error_description']))
-    #     return redirect("/create-event")
+    if response.ok:
+        flash("Your event was created!")
+        flash("Click here to go to your event")
+        return redirect("/")
+    else:
+        flash('OAuth failed: {}'.format(data['error_description']))
+        return redirect("/create-event")
 
     return redirect("/")
 
